@@ -1,0 +1,4 @@
+numpy
+pyglet
+moderngl
+moderngl-window
