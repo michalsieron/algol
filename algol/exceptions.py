@@ -1,0 +1,2 @@
+class AlgolException(Exception):
+    pass
