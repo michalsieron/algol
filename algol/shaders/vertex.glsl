@@ -1,16 +1,10 @@
 #version 330
 
-#define NUMBER_OF_OBJECTS %%NUMBER_OF_OBJECTS%%
-
-uniform float radii[NUMBER_OF_OBJECTS];
-uniform vec3 colors[NUMBER_OF_OBJECTS];
-uniform vec2 window_size;
-
 in vec3 in_position;
-out vec3 color;
+in vec2 in_texcoord_0;
+out vec2 uv;
 
 void main() {
     gl_Position = vec4(in_position, 1.0);
-    gl_PointSize = radii[gl_VertexID];
-    color = colors[gl_VertexID];
+    uv = in_texcoord_0;
 }

@@ -19,7 +19,7 @@ class WorldObject:
     def update(self, time):
         pass
 
-    def as_tuple(self) -> (float, float, float):
+    def as_tuple(self) -> (float, float, float, float):
         pass
 
 
@@ -44,18 +44,18 @@ class Star(WorldObject):
         if callable(self._x):
             self._pos.x = self._x(self, time, data)
         else:
-            self._pos.x = 0.0
+            self._pos.x = self._x
         if callable(self._y):
             self._pos.y = self._y(self, time, data)
         else:
-            self._pos.y = 0.0
+            self._pos.y = self._y
         if callable(self._z):
             self._pos.z = self._z(self, time, data)
         else:
-            self._pos.z = 0.0
+            self._pos.z = self._z
 
-    def as_tuple(self) -> (float, float, float):
-        return tuple(self._pos)
+    def as_tuple(self) -> (float, float, float, float):
+        return (*self._pos, self._radius)
 
 
 class Planet(WorldObject):
@@ -70,17 +70,11 @@ class World:
     def size(self) -> int:
         return len(self._objects)
 
-    @property
-    def radii(self) -> [float]:
-        return [o.radius for o in self._objects]
-
-    @property
     def colors(self) -> [(float, float, float)]:
         return [o.color for o in self._objects]
 
-    @property
-    def vertices(self) -> [float]:
-        return list(chain.from_iterable(o.as_tuple() for o in self._objects))
+    def as_tuples(self) -> [(float, float, float, float)]:
+        return [o.as_tuple() for o in self._objects]
 
     def update(self, time: float, data: dict = {}):
         for obj in self._objects:

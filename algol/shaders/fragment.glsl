@@ -1,9 +1,9 @@
 #version 330
 
-in vec3 color;
-out vec4 out_color;
+uniform sampler2D texture0;
+in vec2 uv;
+out vec4 fragColor;
 
 void main() {
-    float dist = step(length(gl_PointCoord.xy - vec2(0.5)), 0.5);
-    out_color = vec4(dist * color, dist);
+    fragColor = texture(texture0, uv);
 }

@@ -24,48 +24,45 @@ class App(mglw.WindowConfig):
         W, H = App.window_size
         self._world = World()
         self._world.add(
-            Star(200, x=(lambda s, t, d: 0), y=(lambda s, t, d: 0), z=0),
+            Star(200, x=(W / 2), y=(H / 2), z=0),
             Star(
                 100,
-                x=(lambda s, t, d: math.sin(t) / 2),
-                y=(lambda s, t, d: -math.cos(t) / 4),
-                z=0,
+                x=(lambda s, t, d: W / 3 * math.sin(t) + W / 2),
+                y=(H / 2),
+                z=(lambda s, t, d: 100 * math.cos(t)),
                 color=(1.0, 1.0, 0.0),
             ),
-            Star(
-                50,
-                x=(lambda s, t, d: math.cos(t) / 1.5),
-                y=(lambda s, t, d: math.sin(t) / 1.5),
-                z=0,
-                color=(0.75, 0.50, 0.25),
-            ),
         )
 
-        vertex_source = shader_source(
-            self._path / "shaders" / "vertex.glsl",
-            {"NUMBER_OF_OBJECTS": self._world.size},
-        )
+        vertex_source = shader_source(self._path / "shaders" / "vertex.glsl")
         fragment_source = shader_source(self._path / "shaders" / "fragment.glsl")
-        self.prog = self.ctx.program(
+        self.quad_program = self.ctx.program(
             vertex_shader=vertex_source, fragment_shader=fragment_source
         )
+        self.quad_fs = mglw.geometry.quad_fs()
+        self.texture = self.ctx.texture((1280, 720), 4)
+
+        compute_source = shader_source(
+            self._path / "shaders" / "compute.glsl",
+            {"NUMBER_OF_OBJECTS": self._world.size},
+        )
+        self.compute = self.ctx.compute_shader(compute_source)
 
     def render(self, time, frame_time):
-        self.ctx.clear(0.05, 0.05, 0.15)
-        self.ctx.enable_only(mgl.PROGRAM_POINT_SIZE | mgl.BLEND)
-        self.ctx.blend_func = mgl.ADDITIVE_BLENDING
-
         self._world.update(time)
 
-        self.prog["radii"] = self._world.radii
-        self.prog["colors"] = self._world.colors
-        vertices = self._world.vertices
-        # print(self._world.colors)
-        self.pos_buffer = self.ctx.buffer(np.array(self._world.vertices).astype("f4"))
-        self.vao = self.ctx.vertex_array(
-            self.prog, [(self.pos_buffer, "3f", "in_position")]
-        )
-        self.vao.render(mode=mgl.POINTS)
+        w, h = self.texture.size
+        gw, gh = 16, 16
+        nx, ny, nz = w // gw, h // gh, 1
+
+        self.compute["background_color"] = (0.05, 0.05, 0.15)
+        self.compute["objects"] = self._world.as_tuples()
+        self.compute["colors"] = self._world.colors()
+
+        self.texture.bind_to_image(0, read=False, write=True)
+        self.compute.run(nx, ny, nz)
+        self.texture.use(location=0)
+        self.quad_fs.render(self.quad_program)
 
     @classmethod
     def run(cls):
