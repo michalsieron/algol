@@ -1,12 +1,9 @@
 import os
 import math
 from pathlib import Path
-from random import uniform
 
 import moderngl as mgl
 import moderngl_window as mglw
-import pyglet
-import numpy as np
 from pyrr import Matrix33
 
 from utils import shader_source
@@ -80,6 +77,7 @@ class App(mglw.WindowConfig):
         )
         self.camera_position = (0, 0, 20)
         self.zoom_level = 1
+        self.show_checkboard = False
 
     def render(self, time, frame_time):
         self._world.update(time)
@@ -92,6 +90,7 @@ class App(mglw.WindowConfig):
         self.compute["perspective_matrix"].write(self.perspective_matrix)
         self.compute["camera_position"] = self.camera_position
         self.compute["zoom_level"] = self.zoom_level
+        self.compute["show_checkboard"] = self.show_checkboard
 
         self.compute.run(W, H, 1)
         self.texture.use(location=0)
@@ -112,9 +111,11 @@ class App(mglw.WindowConfig):
                 self.camera_position = (0, 0, 20)
             elif key == self.wnd.keys.SPACE:
                 self.zoom_level = 1
+            elif key == self.wnd.keys.TAB:
+                self.show_checkboard = not self.show_checkboard
 
     def mouse_scroll_event(self, x_offset, y_offset):
-        self.zoom_level = min(max(self.zoom_level + y_offset / 10, 0), 10)
+        self.zoom_level = min(max(self.zoom_level + y_offset / 5, 0), 10)
 
     @classmethod
     def run(cls):

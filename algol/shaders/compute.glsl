@@ -12,10 +12,15 @@ uniform vec3 background_color;
 uniform mat3 perspective_matrix;
 uniform vec3 camera_position;
 uniform float zoom_level;
+uniform bool show_checkboard;
 
 float solarIntensity(in float dist, in float radius) {
     float c = sqrt(1 - dist/radius);
     return 0.3 + 0.93 * c - 0.23 * c * c;
+}
+
+float luminance(in vec3 color) {
+    return dot(color, vec3(0.2126, 0.7152, 0.0722));
 }
 
 bool sphere_hit(in vec3 center, in float radius,
@@ -53,11 +58,12 @@ void main() {
     ivec2 size = imageSize(out_tex);
     vec3 color = background_color;
 
-    if (
-        ((texel_pos.x / 80) % 2 == 0 && (texel_pos.y / 80) % 2 == 1) ||
-        ((texel_pos.x / 80) % 2 == 1 && (texel_pos.y / 80) % 2 == 0)) {
-        color = (vec3(1.0) - background_color) / 2;
-    }
+    if (show_checkboard)
+      if (
+          ((texel_pos.x / 80) % 2 == 0 && (texel_pos.y / 80) % 2 == 1) ||
+          ((texel_pos.x / 80) % 2 == 1 && (texel_pos.y / 80) % 2 == 0)) {
+          color = (vec3(1.0) - background_color) / 2;
+      }
 
     vec2 xy = (texel_pos * 2.0 - size) / size;
     vec3 ray_origin = vec3(xy * max_xy, 0.0);
@@ -94,6 +100,6 @@ void main() {
     imageStore(
         out_tex,
         texel_pos,
-        vec4(color, 1.0)
+        vec4(color, luminance(color))
     );
 }
