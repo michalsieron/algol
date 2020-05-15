@@ -71,10 +71,10 @@ class World:
         return len(self._objects)
 
     def colors(self) -> [(float, float, float)]:
-        return [o.color for o in self._objects]
+        return [o.color for o in sorted(self._objects, key=lambda ob: ob.radius)]
 
     def as_tuples(self) -> [(float, float, float, float)]:
-        return [o.as_tuple() for o in self._objects]
+        return [o.as_tuple() for o in sorted(self._objects, key=lambda ob: ob.radius)]
 
     def update(self, time: float, data: dict = {}):
         for obj in self._objects:
