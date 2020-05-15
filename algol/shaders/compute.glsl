@@ -77,11 +77,11 @@ void main() {
     float closest_so_far = t_max;
 
     mat3 rotation = mat3(vec3(1, 0, 0), vec3(0, 0, 1), vec3(0, 1, 0));
-
     for (int i = 0; i < NUMBER_OF_OBJECTS; i++) {
-        if (sphere_hit(zoom_level * (perspective_matrix * objects[i].xyz
-                                     - camera_position),
-                       zoom_level * objects[i].w,
+        vec3 projected_center = zoom_level * (perspective_matrix * objects[i].xyz - camera_position);
+        float scaled_radius = zoom_level * objects[i].w;
+        if (sphere_hit(projected_center,
+                       scaled_radius,
                        ray_origin, ray_direction,
                        t_min, closest_so_far,
                        hit_point, hit_t)) {
