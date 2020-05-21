@@ -26,11 +26,14 @@ class WorldObject:
 class Star(WorldObject):
     def __init__(self, radius: float, **kwargs):
         self._radius: float = radius
-        self._pos: Vector3 = Vector3(kwargs.get("pos", [0.0, 0.0, 0.0]))
-        self._x = kwargs.get("x", 0.0)
-        self._y = kwargs.get("y", 0.0)
-        self._z = kwargs.get("z", 0.0)
-        self._color = kwargs.get("color", (1.0, 1.0, 1.0))
+        self._pos: Vector3 = Vector3([0.0, 0.0, 0.0])
+        self._center: Vector3 = Vector3(kwargs.get("center", [0.0, 0.0, 0.0]))
+        self._axes_lengths: Vector3 = Vector3(
+            kwargs.get("axes_lengths", [0.0, 0.0, 0.0])
+        )
+        self._velocities: Vector3 = Vector3(kwargs.get("velocities", [0.0, 0.0, 0.0]))
+        self._phase: Vector3 = Vector3(kwargs.get("phase", [0.0, 0.0, 0.0]))
+        self._color: (float, float, float) = tuple(kwargs.get("color", (1.0, 1.0, 1.0)))
 
     @property
     def radius(self):
@@ -40,19 +43,11 @@ class Star(WorldObject):
     def color(self) -> (float, float, float):
         return self._color
 
-    def update(self, time, data: dict = {}):
-        if callable(self._x):
-            self._pos.x = self._x(self, time, data)
-        else:
-            self._pos.x = self._x
-        if callable(self._y):
-            self._pos.y = self._y(self, time, data)
-        else:
-            self._pos.y = self._y
-        if callable(self._z):
-            self._pos.z = self._z(self, time, data)
-        else:
-            self._pos.z = self._z
+    def update(self, time):
+        temp = self._velocities * time + self._phase
+        self._pos = (self._axes_lengths / 2.0) * Vector3(
+            [math.sin(temp.x), math.sin(temp.y), math.cos(temp.z)]
+        ) + self._center
 
     def as_tuple(self) -> (float, float, float, float):
         return (*self._pos, self._radius)
@@ -66,6 +61,10 @@ class World:
     def __init__(self):
         self._objects: set = set()
 
+    def load_dict(self, data: dict):
+        for star in data.get("stars", []):
+            self._objects.add(Star(**star))
+
     @property
     def size(self) -> int:
         return len(self._objects)
@@ -76,9 +75,9 @@ class World:
     def as_tuples(self) -> [(float, float, float, float)]:
         return [o.as_tuple() for o in sorted(self._objects, key=lambda ob: ob.radius)]
 
-    def update(self, time: float, data: dict = {}):
+    def update(self, time: float):
         for obj in self._objects:
-            obj.update(time, data)
+            obj.update(time)
 
     def add(self, *objs: [WorldObject]):
         for obj in objs:

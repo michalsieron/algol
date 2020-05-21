@@ -1,0 +1,16 @@
+{
+  "stars": [{
+    "radius": 10,
+    "center": [0, 0, 0],
+    "axes_lengths": [24, 12, 24],
+    "velocities": [1, 1, 1],
+    "color": [1, 1, 0]
+  }, {
+    "radius": 7,
+    "center": [0, 0, 0],
+    "axes_lengths": [64, 5, 300],
+    "velocities": [1, 1, 1],
+    "phase": [3.14, 3.14, 3.14],
+    "color": [0, 1, 1]
+  }]
+}

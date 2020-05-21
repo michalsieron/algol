@@ -1,6 +1,7 @@
 import os
 import math
 from pathlib import Path
+import json
 
 import moderngl as mgl
 import moderngl_window as mglw
@@ -27,37 +28,7 @@ class App(mglw.WindowConfig):
         self._path = Path(os.path.dirname(__file__))
 
         W, H = App.window_size
-        self._world = World()
-        self._world.add(
-            Star(
-                2,
-                x=(lambda s, t, d: 0),
-                y=(lambda s, t, d: 0),
-                z=(lambda s, t, d: 0),
-                color=(1.0, 1.0, 1.0),
-            ),
-            Star(
-                1,
-                x=(lambda s, t, d: 8 * math.sin(t)),
-                y=(lambda s, t, d: 0),
-                z=(lambda s, t, d: 10 * math.cos(t)),
-                color=(1.0, 1.0, 0.0),
-            ),
-            Star(
-                0.5,
-                x=(lambda s, t, d: 16 * math.sin(t * 0.9)),
-                y=(lambda s, t, d: math.cos(t)),
-                z=(lambda s, t, d: 16 * math.cos(t * 0.9)),
-                color=(0.0, 1.0, 1.0),
-            ),
-            Star(
-                0.2,
-                x=(lambda s, t, d: 4 * math.sin(t * 1.5)),
-                y=0,
-                z=(lambda s, t, d: 4 * math.cos(t * 1.5)),
-                color=(1.0, 0.0, 1.0),
-            ),
-        )
+        self.load_preset("preset1.json")
 
         vertex_source = shader_source(self._path / "shaders" / "vertex.glsl")
         fragment_source = shader_source(self._path / "shaders" / "fragment.glsl")
@@ -75,9 +46,26 @@ class App(mglw.WindowConfig):
         self.perspective_matrix = Matrix33(
             [[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="f4"
         )
-        self.camera_position = (0, 0, 20)
+        self.camera_position = (0, 0, 100)
         self.zoom_level = 1
         self.show_checkboard = False
+
+    def load_preset(self, preset):
+        joined = os.path.join(os.path.dirname(__file__), "presets", preset)
+        if os.path.exists(joined):
+            with open(joined, "r") as fp:
+                data = json.load(fp)
+        else:
+            return
+
+        self._world = World()
+        self._world.load_dict(data)
+
+        compute_source = shader_source(
+            self._path / "shaders" / "compute.glsl",
+            {"NUMBER_OF_OBJECTS": self._world.size},
+        )
+        self.compute = self.ctx.compute_shader(compute_source)
 
     def render(self, time, frame_time):
         self._world.update(time)
@@ -103,19 +91,38 @@ class App(mglw.WindowConfig):
                 self.perspective_matrix = Matrix33(
                     [[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="f4"
                 )
-                self.camera_position = (0, 0, 20)
+                self.camera_position = (0, 0, 100)
             elif key == self.wnd.keys.Z:
                 self.perspective_matrix = Matrix33(
                     [[1, 0, 0], [0, 0, 1], [0, 1, 0]], dtype="f4"
                 )
-                self.camera_position = (0, 0, 20)
+                self.camera_position = (0, 0, 100)
             elif key == self.wnd.keys.SPACE:
                 self.zoom_level = 1
             elif key == self.wnd.keys.TAB:
                 self.show_checkboard = not self.show_checkboard
+            elif key == self.wnd.keys.NUMBER_1:
+                self.load_preset("preset1.json")
+            elif key == self.wnd.keys.NUMBER_2:
+                self.load_preset("preset2.json")
+            elif key == self.wnd.keys.NUMBER_3:
+                self.load_preset("preset3.json")
+            elif key == self.wnd.keys.NUMBER_4:
+                self.load_preset("preset4.json")
+            elif key == self.wnd.keys.NUMBER_5:
+                self.load_preset("preset5.json")
+            elif key == self.wnd.keys.NUMBER_6:
+                self.load_preset("preset6.json")
+            elif key == self.wnd.keys.NUMBER_7:
+                self.load_preset("preset7.json")
+            elif key == self.wnd.keys.NUMBER_8:
+                self.load_preset("preset8.json")
+            elif key == self.wnd.keys.NUMBER_9:
+                self.load_preset("preset9.json")
 
     def mouse_scroll_event(self, x_offset, y_offset):
-        self.zoom_level = min(max(self.zoom_level + y_offset / 5, 0), 10)
+        multiplier = 1.25 if y_offset > 0 else 0.8
+        self.zoom_level = min(max(self.zoom_level * multiplier, 0.001), 10)
 
     @classmethod
     def run(cls):

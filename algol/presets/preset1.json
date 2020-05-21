@@ -1,0 +1,15 @@
+{
+  "stars": [{
+    "radius": 2,
+    "center": [0, 0, 0],
+    "axes_lengths": [0, 0, 0],
+    "velocities": [0, 0, 0],
+    "color": [1, 1, 1]
+  }, {
+    "radius": 1,
+    "center": [5, 0, 0],
+    "axes_lengths": [30, 0, 12],
+    "velocities": [1, 0, 1],
+    "color": [1, 1, 0]
+  }]
+}

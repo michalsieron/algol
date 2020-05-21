@@ -66,7 +66,7 @@ void main() {
       }
 
     vec2 xy = (texel_pos * 2.0 - size) / size;
-    vec3 ray_origin = vec3(xy * max_xy, 0.0);
+    vec3 ray_origin = vec3(xy * max_xy, 0.0) + camera_position;
     vec3 ray_direction = vec3(0.0, 0.0, -1.0);
 
     float t_min = 0;
@@ -78,7 +78,7 @@ void main() {
 
     mat3 rotation = mat3(vec3(1, 0, 0), vec3(0, 0, 1), vec3(0, 1, 0));
     for (int i = 0; i < NUMBER_OF_OBJECTS; i++) {
-        vec3 projected_center = zoom_level * (perspective_matrix * objects[i].xyz - camera_position);
+        vec3 projected_center = zoom_level * (perspective_matrix * objects[i].xyz);
         float scaled_radius = zoom_level * objects[i].w;
         if (sphere_hit(projected_center,
                        scaled_radius,
@@ -91,8 +91,7 @@ void main() {
     }
 
     if (hit_anything >= 0) {
-        float dist = length(zoom_level * (perspective_matrix * objects[hit_anything].xyz
-                            - camera_position).xy - hit_point.xy);
+        float dist = length(zoom_level * (perspective_matrix * objects[hit_anything].xyz).xy - hit_point.xy);
         color = solarIntensity(dist, zoom_level * objects[hit_anything].w)
                 * colors[hit_anything];
     }
