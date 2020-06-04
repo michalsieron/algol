@@ -12,7 +12,7 @@ uniform vec3 background_color;
 uniform mat3 perspective_matrix;
 uniform vec3 camera_position;
 uniform float zoom_level;
-uniform bool show_checkboard;
+uniform bool show_checkerboard;
 
 float solarIntensity(in float dist, in float radius) {
     float c = sqrt(1 - dist/radius);
@@ -57,7 +57,7 @@ void main() {
     ivec2 size = imageSize(out_tex);
     vec3 color = background_color;
 
-    if (show_checkboard)
+    if (show_checkerboard)
       if (
           ((texel_pos.x / 80) % 2 == 0 && (texel_pos.y / 80) % 2 == 1) ||
           ((texel_pos.x / 80) % 2 == 1 && (texel_pos.y / 80) % 2 == 0)) {

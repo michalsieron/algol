@@ -8,8 +8,9 @@ import moderngl_window as mglw
 from pyrr import Matrix33
 import numpy as np
 
-from utils import shader_source
 from world import World, Star
+from logger import Logger
+from exceptions import AlgolException
 
 
 class App(mglw.WindowConfig):
@@ -21,83 +22,124 @@ class App(mglw.WindowConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
         self._path = Path(os.path.dirname(__file__))
-
-        W, H = App.window_size
+        self._logger = Logger(os.path.dirname(self._path))
+        self._logger.log("Program started")
+        self._active_preset = None
         self.load_preset("preset1.json")
 
-        vertex_source = shader_source(self._path / "shaders" / "vertex.glsl")
-        fragment_source = shader_source(self._path / "shaders" / "fragment.glsl")
-        self.quad_program = self.ctx.program(
+        vertex_source = self.shader_source("vertex.glsl")
+        fragment_source = self.shader_source("fragment.glsl")
+        self._quad_program = self.ctx.program(
             vertex_shader=vertex_source, fragment_shader=fragment_source
         )
-        self.quad_fs = mglw.geometry.quad_fs()
-        self.texture = self.ctx.texture((1280, 720), 4)
+        self._quad_fs = mglw.geometry.quad_fs()
+        self._texture = self.ctx.texture((1280, 720), 4)
 
-        compute_source = shader_source(
-            self._path / "shaders" / "compute.glsl",
-            {"NUMBER_OF_OBJECTS": self._world.size},
+        compute_source = self.shader_source(
+            "compute.glsl", {"NUMBER_OF_OBJECTS": self._world.size}
         )
-        self.compute = self.ctx.compute_shader(compute_source)
-        self.perspective_matrix = Matrix33(
+        self._compute = self.ctx.compute_shader(compute_source)
+        self._perspective_matrix = Matrix33(
             [[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="f4"
         )
-        self.camera_position = (0, 0, 100)
-        self.zoom_level = 1
-        self.show_checkboard = False
+        self._camera_position = (0, 0, 100)
+        self._zoom_level = 1
+        self._show_checkerboard = False
+
+        self._data_file = open("data.csv", "w")
+        self._temp_texture_buffer = np.empty(1280 * 720 * 4, dtype="uint8")
+
+    @property
+    def camera_position(self) -> (float, float, float):
+        return self._camera_position
+
+    @property
+    def zoom_level(self) -> float:
+        return self._zoom_level
+
+    @property
+    def show_checkerboard(self) -> bool:
+        return self._show_checkerboard
+
+    def shader_source(self, shader, data: dict = {}) -> str:
+        joined = os.path.join(self._path, "shaders", shader)
+        if not os.path.exists(joined):
+            raise AlgolException(f"Missing shader file: {shader}")
+
+        with open(joined, "r") as fp:
+            rtn: str = fp.read()
+
+        for old, new in data.items():
+            rtn = rtn.replace(f"%%{old}%%", str(new))
+
+        self._logger.log(f"Shader file '{shader}' read")
+        return rtn
 
     def load_preset(self, preset):
-        joined = os.path.join(os.path.dirname(__file__), "presets", preset)
-        if os.path.exists(joined):
-            with open(joined, "r") as fp:
-                data = json.load(fp)
-        else:
+        joined = os.path.join(self._path, "presets", preset)
+        self._logger.log(f"'{preset}' preset selected")
+        if not os.path.exists(joined):
+            self._logger.log(f"'{preset}' preset not found")
             return
 
+        with open(joined, "r") as fp:
+            data = json.load(fp)
         self._world = World()
         self._world.load_dict(data)
+        self._active_preset = preset
 
-        compute_source = shader_source(
-            self._path / "shaders" / "compute.glsl",
-            {"NUMBER_OF_OBJECTS": self._world.size},
+        compute_source = self.shader_source(
+            "compute.glsl", {"NUMBER_OF_OBJECTS": self._world.size}
         )
-        self.compute = self.ctx.compute_shader(compute_source)
+        self._compute = self.ctx.compute_shader(compute_source)
 
     def render(self, time, frame_time):
         self._world.update(time)
 
-        W, H = self.texture.size
+        W, H = self._texture.size
 
-        self.compute["background_color"] = (0.05, 0.05, 0.15)
-        self.compute["objects"] = self._world.as_tuples()
-        self.compute["colors"] = self._world.colors()
-        self.compute["perspective_matrix"].write(self.perspective_matrix)
-        self.compute["camera_position"] = self.camera_position
-        self.compute["zoom_level"] = self.zoom_level
-        self.compute["show_checkboard"] = self.show_checkboard
+        self._compute["background_color"] = (0.05, 0.05, 0.15)
+        self._compute["objects"] = self._world.as_tuples()
+        self._compute["colors"] = self._world.colors()
+        self._compute["perspective_matrix"].write(self._perspective_matrix)
+        self._compute["camera_position"] = self.camera_position
+        self._compute["zoom_level"] = self.zoom_level
+        self._compute["show_checkerboard"] = self.show_checkerboard
 
-        self.compute.run(W // 16, H // 16, 1)
-        self.texture.use(location=0)
-        self.texture.bind_to_image(0, read=False, write=True)
-        self.quad_fs.render(self.quad_program)
+        self._compute.run(W // 16, H // 16, 1)
+        self._texture.use(location=0)
+        self._texture.bind_to_image(0, read=False, write=True)
+        self._quad_fs.render(self._quad_program)
+
+        self._texture.read_into(self._temp_texture_buffer)
+        mean_luminance = np.mean(self._temp_texture_buffer[::4])
+        self._data_file.write(f"{time},{mean_luminance},{self._active_preset}\n")
 
     def key_event(self, key, action, modifiers):
         if action == self.wnd.keys.ACTION_RELEASE:
             if key == self.wnd.keys.Y:
-                self.perspective_matrix = Matrix33(
+                self._perspective_matrix = Matrix33(
                     [[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="f4"
                 )
-                self.camera_position = (0, 0, 100)
+                self._camera_position = (0, 0, 100)
+                self._logger.log("Perspective changed to side view")
             elif key == self.wnd.keys.Z:
-                self.perspective_matrix = Matrix33(
+                self._perspective_matrix = Matrix33(
                     [[1, 0, 0], [0, 0, 1], [0, 1, 0]], dtype="f4"
                 )
-                self.camera_position = (0, 0, 100)
+                self._camera_position = (0, 0, 100)
+                self._logger.log("Perspective changed to top view")
             elif key == self.wnd.keys.SPACE:
-                self.zoom_level = 1
+                self._zoom_level = 1
+                self._logger.log("Zoom level reset")
             elif key == self.wnd.keys.TAB:
-                self.show_checkboard = not self.show_checkboard
+                self._show_checkerboard = not self.show_checkerboard
+                self._logger.log(
+                    "Checkerboard has been " + "shown"
+                    if self.show_checkerboard
+                    else "hidden"
+                )
             elif key == self.wnd.keys.NUMBER_1:
                 self.load_preset("preset1.json")
             elif key == self.wnd.keys.NUMBER_2:
@@ -119,7 +161,8 @@ class App(mglw.WindowConfig):
 
     def mouse_scroll_event(self, x_offset, y_offset):
         multiplier = 1.25 if y_offset > 0 else 0.8
-        self.zoom_level = min(max(self.zoom_level * multiplier, 0.25), 10)
+        self._zoom_level = min(max(self.zoom_level * multiplier, 0.25), 10)
+        self._logger.log(f"Zoom level changed to {self.zoom_level}")
 
     @classmethod
     def run(cls):
