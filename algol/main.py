@@ -119,7 +119,7 @@ class App(mglw.WindowConfig):
 
     def mouse_scroll_event(self, x_offset, y_offset):
         multiplier = 1.25 if y_offset > 0 else 0.8
-        self.zoom_level = min(max(self.zoom_level * multiplier, 0.001), 10)
+        self.zoom_level = min(max(self.zoom_level * multiplier, 0.25), 10)
 
     @classmethod
     def run(cls):
