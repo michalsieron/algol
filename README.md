@@ -22,6 +22,7 @@ As algol is using OpenGL Compute Shaders you will need GPU with drivers supporti
 - `Y` and `Z` keys change perspective
 - use 1-9 keys on numpad to change presets
 - press escape button to exit program
+- after leaving program there will be 2 files in main directory: data.csv (you can run `python algol/plot.py` to plot chart of mean luminance) and algol.log
 
 ## ❗ Notice
 
@@ -32,7 +33,7 @@ As algol is using OpenGL Compute Shaders you will need GPU with drivers supporti
 - [x] base app
 - [x] compute shader
 - [x] ray tracing
-- [ ] calculate luminosity of the system and graph it
+- [x] calculate luminosity of the system and graph it
 - [ ] proper abstract classes using `abc` module
-- [ ] Planet subclass
+- [x] Planet subclass
 - [x] config files
