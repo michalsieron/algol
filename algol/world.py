@@ -1,5 +1,4 @@
 import math
-
 from itertools import chain
 
 from pyrr import Vector3, Vector4
@@ -13,8 +12,28 @@ class WorldObject:
         return self._radius
 
     @property
+    def pos(self) -> Vector3:
+        return self._pos
+
+    @property
+    def center(self) -> Vector3:
+        return self._center
+
+    @property
+    def axes_lengths(self) -> Vector3:
+        return self._axes_lengths
+
+    @property
+    def velocities(self) -> Vector3:
+        return self._velocities
+
+    @property
+    def phase(self) -> Vector3:
+        return self._phase
+
+    @property
     def color(self) -> (float, float, float):
-        pass
+        return self._color
 
     def update(self, time):
         pass
@@ -35,14 +54,6 @@ class Star(WorldObject):
         self._phase: Vector3 = Vector3(kwargs.get("phase", [0.0, 0.0, 0.0]))
         self._color: (float, float, float) = tuple(kwargs.get("color", (1.0, 1.0, 1.0)))
 
-    @property
-    def radius(self):
-        return self._radius
-
-    @property
-    def color(self) -> (float, float, float):
-        return self._color
-
     def update(self, time):
         temp = self._velocities * time + self._phase
         self._pos = (self._axes_lengths / 2.0) * Vector3(
@@ -54,7 +65,25 @@ class Star(WorldObject):
 
 
 class Planet(WorldObject):
-    pass
+    def __init__(self, radius: float, **kwargs):
+        self._radius: float = radius
+        self._pos: Vector3 = Vector3([0.0, 0.0, 0.0])
+        self._center: Vector3 = Vector3(kwargs.get("center", [0.0, 0.0, 0.0]))
+        self._axes_lengths: Vector3 = Vector3(
+            kwargs.get("axes_lengths", [0.0, 0.0, 0.0])
+        )
+        self._velocities: Vector3 = Vector3(kwargs.get("velocities", [0.0, 0.0, 0.0]))
+        self._phase: Vector3 = Vector3(kwargs.get("phase", [0.0, 0.0, 0.0]))
+        self._color: (float, float, float) = (0.0, 0.0, 0.0)
+
+    def update(self, time):
+        temp = self._velocities * time + self._phase
+        self._pos = (self._axes_lengths / 2.0) * Vector3(
+            [math.sin(temp.x), math.sin(temp.y), math.cos(temp.z)]
+        ) + self._center
+
+    def as_tuple(self) -> (float, float, float, float):
+        return (*self._pos, self._radius)
 
 
 class World:
@@ -64,6 +93,8 @@ class World:
     def load_dict(self, data: dict):
         for star in data.get("stars", []):
             self._objects.add(Star(**star))
+        for planet in data.get("planets", []):
+            self._objects.add(Planet(**planet))
 
     @property
     def size(self) -> int:
