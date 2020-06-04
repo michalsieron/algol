@@ -6,11 +6,10 @@ import json
 import moderngl as mgl
 import moderngl_window as mglw
 from pyrr import Matrix33
+import numpy as np
 
 from utils import shader_source
 from world import World, Star
-
-instance = None
 
 
 class App(mglw.WindowConfig):
@@ -22,8 +21,6 @@ class App(mglw.WindowConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        global instance
-        instance = self
 
         self._path = Path(os.path.dirname(__file__))
 
