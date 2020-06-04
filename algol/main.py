@@ -1,14 +1,12 @@
 import os
 import math
-from pathlib import Path
 import json
 
-import moderngl as mgl
 import moderngl_window as mglw
 from pyrr import Matrix33
 import numpy as np
 
-from world import World, Star
+from world import World
 from logger import Logger
 from exceptions import AlgolException
 
@@ -22,7 +20,7 @@ class App(mglw.WindowConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._path = Path(os.path.dirname(__file__))
+        self._path = os.path.dirname(__file__)
         self._logger = Logger(os.path.dirname(self._path))
         self._logger.log("Program started")
         self._active_preset = None
