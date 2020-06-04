@@ -80,7 +80,7 @@ class App(mglw.WindowConfig):
         self.compute["zoom_level"] = self.zoom_level
         self.compute["show_checkboard"] = self.show_checkboard
 
-        self.compute.run(W, H, 1)
+        self.compute.run(W // 16, H // 16, 1)
         self.texture.use(location=0)
         self.texture.bind_to_image(0, read=False, write=True)
         self.quad_fs.render(self.quad_program)

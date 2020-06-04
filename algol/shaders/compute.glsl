@@ -2,7 +2,7 @@
 
 #define NUMBER_OF_OBJECTS %%NUMBER_OF_OBJECTS%%
 
-layout (local_size_x=1, local_size_y=1) in;
+layout (local_size_x=16, local_size_y=16) in;
 
 layout (rgba8, location=0) writeonly uniform image2D out_tex;
 
@@ -51,7 +51,6 @@ bool sphere_hit(in vec3 center, in float radius,
 }
 
 void main() {
-
     vec2 max_xy = vec2(16.0, 9.0);
     ivec2 texel_pos = ivec2(gl_GlobalInvocationID.xy);
 
