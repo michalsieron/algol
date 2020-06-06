@@ -1,3 +1,5 @@
+"""Part of Algol program used to plot charts of mean luminance"""
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 from itertools import cycle
@@ -5,13 +7,14 @@ from itertools import cycle
 
 with open("data.csv", "r") as fp:
 
-    def process_row(row):
+    def process_row(row: str) -> (float, float, str):
+        # used to just convert given row of data into usable data
         t, l, p = row.split(",")
         return (float(t), float(l), p[:-5])
 
     data = [process_row(line) for line in fp.read().splitlines()[1:]]
 
-
+# presets and colors used to plot their luminance
 presets = {
     "preset1": "#263165",
     "preset2": "#FFAB0B",
@@ -24,6 +27,7 @@ presets = {
     "preset9": "#F5B8D2",
 }
 
+# patches for legend
 patches = [Patch(fc=c, label=p) for p, c in presets.items()]
 
 current_times = [data[0][0]]
