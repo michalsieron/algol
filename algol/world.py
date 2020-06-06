@@ -1,12 +1,13 @@
 import math
 from itertools import chain
+from abc import ABC, abstractmethod
 
 from pyrr import Vector3, Vector4
 
 from exceptions import AlgolException
 
 
-class WorldObject:
+class WorldObject(ABC):
     @property
     def radius(self) -> float:
         return self._radius
@@ -35,9 +36,11 @@ class WorldObject:
     def color(self) -> (float, float, float):
         return self._color
 
+    @abstractmethod
     def update(self, time):
         pass
 
+    @abstractmethod
     def as_tuple(self) -> (float, float, float, float):
         pass
 
