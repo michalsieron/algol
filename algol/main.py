@@ -12,6 +12,9 @@ from exceptions import AlgolException
 
 
 class App(mglw.WindowConfig):
+    """Base class used to run Algol"""
+
+    # OpenGL 4.3 needed for compute shaders
     gl_version = (4, 3)
     title = "Algol"
     window_size = (1280, 720)
@@ -20,12 +23,21 @@ class App(mglw.WindowConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
         self._path = os.path.dirname(__file__)
+
+        # logger instance for logging events
         self._logger = Logger(os.path.dirname(self._path))
         self._logger.log("Program started")
         self._active_preset = None
         self.load_preset("preset1.json")
 
+        # used to store texture data when calculating luminance
+        self._temp_texture_buffer = np.empty(1280 * 720 * 4, dtype="uint8")
+        # used to log data measured
+        self._data_file = open("data.csv", "w")
+
+        # shaders preparation
         vertex_source = self.shader_source("vertex.glsl")
         fragment_source = self.shader_source("fragment.glsl")
         self._quad_program = self.ctx.program(
@@ -38,6 +50,8 @@ class App(mglw.WindowConfig):
             "compute.glsl", {"NUMBER_OF_OBJECTS": self._world.size}
         )
         self._compute = self.ctx.compute_shader(compute_source)
+
+        # variables remembering some user settings for runtime
         self._perspective_matrix = Matrix33(
             [[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="f4"
         )
@@ -45,22 +59,27 @@ class App(mglw.WindowConfig):
         self._zoom_level = 1
         self._show_checkerboard = False
 
-        self._data_file = open("data.csv", "w")
-        self._temp_texture_buffer = np.empty(1280 * 720 * 4, dtype="uint8")
-
     @property
     def camera_position(self) -> (float, float, float):
+        """Returns camera position"""
         return self._camera_position
 
     @property
     def zoom_level(self) -> float:
+        """Returns zoom level"""
         return self._zoom_level
 
     @property
     def show_checkerboard(self) -> bool:
+        """Returns `bool` value whether checkerboard should be shown"""
         return self._show_checkerboard
 
     def shader_source(self, shader, data: dict = {}) -> str:
+        """
+        Opens shader file and replaces strings in define section.
+        Defines are between double percentage characters, but you only
+        need to provide `dict` with strings between them as keys
+        """
         joined = os.path.join(self._path, "shaders", shader)
         if not os.path.exists(joined):
             raise AlgolException(f"Missing shader file: {shader}")
@@ -75,6 +94,7 @@ class App(mglw.WindowConfig):
         return rtn
 
     def load_preset(self, preset):
+        """Reads preset files stored as json and creates new `World`"""
         joined = os.path.join(self._path, "presets", preset)
         self._logger.log(f"'{preset}' preset selected")
         if not os.path.exists(joined):
