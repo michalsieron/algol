@@ -27,7 +27,7 @@ class App(mglw.WindowConfig):
         self._path = os.path.dirname(__file__)
 
         # logger instance for logging events
-        self._logger = Logger(os.path.dirname(self._path))
+        self._logger = Logger(os.path.dirname(self._path), "algol.log")
         self._logger.log("Program started")
         self._active_preset = None
         self.load_preset("preset1.json")
@@ -117,6 +117,7 @@ class App(mglw.WindowConfig):
 
         W, H = self._texture.size
 
+        # feeding data to compute shader
         self._compute["background_color"] = (0.05, 0.05, 0.15)
         self._compute["objects"] = self._world.as_tuples()
         self._compute["colors"] = self._world.colors()
@@ -130,12 +131,14 @@ class App(mglw.WindowConfig):
         self._texture.bind_to_image(0, read=False, write=True)
         self._quad_fs.render(self._quad_program)
 
+        # calculating mean luminance
         self._texture.read_into(self._temp_texture_buffer)
         mean_luminance = np.mean(self._temp_texture_buffer[::4])
         self._data_file.write(f"{time},{mean_luminance},{self._active_preset}\n")
 
     def key_event(self, key, action, modifiers):
         if action == self.wnd.keys.ACTION_RELEASE:
+            # perspective
             if key == self.wnd.keys.Y:
                 self._perspective_matrix = Matrix33(
                     [[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="f4"
@@ -148,9 +151,11 @@ class App(mglw.WindowConfig):
                 )
                 self._camera_position = (0, 0, 100)
                 self._logger.log("Perspective changed to top view")
+            # zoom reset
             elif key == self.wnd.keys.SPACE:
                 self._zoom_level = 1
                 self._logger.log("Zoom level reset")
+            # checkerboard
             elif key == self.wnd.keys.TAB:
                 self._show_checkerboard = not self.show_checkerboard
                 self._logger.log(
@@ -158,6 +163,7 @@ class App(mglw.WindowConfig):
                     if self.show_checkerboard
                     else "hidden"
                 )
+            # presets
             elif key == self.wnd.keys.NUMBER_1:
                 self.load_preset("preset1.json")
             elif key == self.wnd.keys.NUMBER_2:
