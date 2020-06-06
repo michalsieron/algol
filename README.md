@@ -34,6 +34,6 @@ As algol is using OpenGL Compute Shaders you will need GPU with drivers supporti
 - [x] compute shader
 - [x] ray tracing
 - [x] calculate luminosity of the system and graph it
-- [ ] proper abstract classes using `abc` module
+- [x] proper abstract classes using `abc` module
 - [x] Planet subclass
 - [x] config files
