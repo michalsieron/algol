@@ -9,7 +9,7 @@
   "planets": [{
     "radius": 1,
     "center": [0, 0, 0],
-    "axes_lengths": [64, 5, 300],
+    "axes_lengths": [64, 5, 100],
     "velocities": [1, 1, 1],
     "phase": [3.14, 3.14, 3.14]
   }]
