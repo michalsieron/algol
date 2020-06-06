@@ -7,7 +7,7 @@ with open("data.csv", "r") as fp:
 
     def process_row(row):
         t, l, p = row.split(",")
-        return (float(t), float(l), p)
+        return (float(t), float(l), p[:-5])
 
     data = [process_row(line) for line in fp.read().splitlines()[1:]]
 
@@ -24,13 +24,22 @@ presets = {
     "preset9": "#F5B8D2",
 }
 
-patches = []
+patches = [Patch(fc=c, label=p) for p, c in presets.items()]
 
-for p, c in presets.items():
-    times = [r[0] for r in data if r[2] == p + ".json"]
-    luminances = [r[1] for r in data if r[2] == p + ".json"]
-    plt.plot(times, luminances, color=presets[p])
-    patches.append(Patch(fc=c, label=p))
+current_times = [data[0][0]]
+current_luminances = [data[0][1]]
+current_preset = data[0][2]
+
+for row in data[1:]:
+    t, l, p = row
+    if current_preset != p:
+        plt.plot(current_times, current_luminances, color=presets[current_preset])
+        current_times = []
+        current_luminances = []
+        current_preset = p
+    current_times.append(t)
+    current_luminances.append(l)
+
 
 plt.legend(handles=patches)
 plt.title("Algol plot")
