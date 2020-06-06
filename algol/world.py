@@ -15,38 +15,47 @@ class WorldObject(ABC):
 
     @property
     def radius(self) -> float:
+        """Returns radius of a `WorldObject`"""
         return self._radius
 
     @property
     def pos(self) -> Vector3:
+        """Returns current position of a `WorldObject`"""
         return self._pos
 
     @property
     def center(self) -> Vector3:
+        """Returns center of orbit of a `WorldObject`"""
         return self._center
 
     @property
     def axes_lengths(self) -> Vector3:
+        """Returns axes' lengths of orbit of a `WorldObject`"""
         return self._axes_lengths
 
     @property
     def velocities(self) -> Vector3:
+        """Returns velocities in XYZ axis of a `WorldObject`"""
         return self._velocities
 
     @property
     def phase(self) -> Vector3:
+        """Returns starting phase of a `WorldObject`"""
         return self._phase
 
     @property
     def color(self) -> (float, float, float):
+        """Returns base color of a `WorldObject`"""
         return self._color
 
     @abstractmethod
     def update(self, time):
+        """Updates a `WorldObject` by given time"""
         pass
 
     @abstractmethod
     def as_tuple(self) -> (float, float, float, float):
+        """Returns `tuple` of 4 `float`s representing `WorldObject`"""
         pass
 
 
