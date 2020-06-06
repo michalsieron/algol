@@ -27,24 +27,28 @@ presets = {
     "preset9": "#F5B8D2",
 }
 
-# patches for legend
-patches = [Patch(fc=c, label=p) for p, c in presets.items()]
-
 current_times = [data[0][0]]
 current_luminances = [data[0][1]]
 current_preset = data[0][2]
+
+# patches for legend
+patches = []
 
 for row in data[1:]:
     t, l, p = row
     if current_preset != p:
         plt.plot(current_times, current_luminances, color=presets[current_preset])
+        patches.append(Patch(fc=presets[current_preset], label=current_preset))
         current_times = []
         current_luminances = []
         current_preset = p
     current_times.append(t)
     current_luminances.append(l)
 
+if current_preset is not None:
+    plt.plot(current_times, current_luminances, color=presets[current_preset])
+    patches.append(Patch(fc=presets[current_preset], label=current_preset))
 
-plt.legend(handles=patches)
-plt.title("Algol plot")
-plt.show()
+    plt.legend(handles=patches)
+    plt.title("Algol plot")
+    plt.show()
