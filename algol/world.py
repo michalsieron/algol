@@ -8,6 +8,11 @@ from exceptions import AlgolException
 
 
 class WorldObject(ABC):
+    """
+    Base class for objects simulated in Algol.
+    Use this as parent class to create new types of objects.
+    """
+
     @property
     def radius(self) -> float:
         return self._radius
@@ -46,6 +51,8 @@ class WorldObject(ABC):
 
 
 class Star(WorldObject):
+    """Represents star objects in Algol"""
+
     def __init__(self, radius: float, **kwargs):
         self._radius: float = radius
         self._pos: Vector3 = Vector3([0.0, 0.0, 0.0])
@@ -68,6 +75,8 @@ class Star(WorldObject):
 
 
 class Planet(WorldObject):
+    """Represents planet objects in Algol"""
+
     def __init__(self, radius: float, **kwargs):
         self._radius: float = radius
         self._pos: Vector3 = Vector3([0.0, 0.0, 0.0])
@@ -90,10 +99,13 @@ class Planet(WorldObject):
 
 
 class World:
+    """Stores `WorldObject`s and provides methods to represent them"""
+
     def __init__(self):
         self._objects: set = set()
 
     def load_dict(self, data: dict):
+        """Loads `World` state from a `dict`"""
         for star in data.get("stars", []):
             self._objects.add(Star(**star))
         for planet in data.get("planets", []):
@@ -101,19 +113,24 @@ class World:
 
     @property
     def size(self) -> int:
+        """Returns number of objects in a `World`"""
         return len(self._objects)
 
     def colors(self) -> [(float, float, float)]:
+        """Returns colors of `WorldObject`s"""
         return [o.color for o in sorted(self._objects, key=lambda ob: ob.radius)]
 
     def as_tuples(self) -> [(float, float, float, float)]:
+        """Returns a `list` of `tuple`s of 4 `float`s representing `WorldObject`s position and radius"""
         return [o.as_tuple() for o in sorted(self._objects, key=lambda ob: ob.radius)]
 
     def update(self, time: float):
+        """Updates all stored `WorldObject`s by given time"""
         for obj in self._objects:
             obj.update(time)
 
     def add(self, *objs: [WorldObject]):
+        """Adds given object(s) to a `World`"""
         for obj in objs:
             if isinstance(obj, WorldObject):
                 self._objects.add(obj)
