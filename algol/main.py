@@ -74,7 +74,7 @@ class App(mglw.WindowConfig):
         """Returns `bool` value whether checkerboard should be shown"""
         return self._show_checkerboard
 
-    def shader_source(self, shader, data: dict = {}) -> str:
+    def shader_source(self, shader: str, data: dict = {}) -> str:
         """
         Opens shader file and replaces strings in define section.
         Defines are between double percentage characters, but you only
@@ -93,7 +93,7 @@ class App(mglw.WindowConfig):
         self._logger.log(f"Shader file '{shader}' read")
         return rtn
 
-    def load_preset(self, preset):
+    def load_preset(self, preset: str):
         """Reads preset files stored as json and creates new `World`"""
         joined = os.path.join(self._path, "presets", preset)
         self._logger.log(f"'{preset}' preset selected")
@@ -112,7 +112,7 @@ class App(mglw.WindowConfig):
         )
         self._compute = self.ctx.compute_shader(compute_source)
 
-    def render(self, time, frame_time):
+    def render(self, time: float, frame_time: float):
         self._world.update(time)
 
         W, H = self._texture.size
